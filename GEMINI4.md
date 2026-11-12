@@ -1,0 +1,76 @@
+# Gemini 4 原生兼容
+
+| 项目 | 说明 |
+| --- | --- |
+| 适用宿主 | SillyTavern / Luker 的 **Google AI Studio** 与 **Vertex AI** 原生来源 |
+| 识别模型 | `gemini-4-carbon`、`gemini-4-argon`、`gemini-4-argon-cyber-permissive` |
+| 所需版本 | Argon：前端扩展与 [ST-Vertex-PayGo-Server](https://github.com/mananekoha114/ST-Vertex-PayGo-Server) 均为 **0.6.0** 及以上；Carbon：两者都需要 **0.6.1-pre1 之后**的版本 |
+
+安装或更新两个组件后，重启 SillyTavern 并刷新浏览器。前端会检查服务端能力，并核对服务端声明的 Gemini 4 模型名单；旧服务端不会静默回退到缺少思考配置的请求。只支持 Argon 的旧服务端遇到 Carbon 时，会在发送前提示更新服务端插件。普通模型和其他 API 来源继续使用原来的发送路径。
+
+## 已处理的行为
+
+### 思考配置与模型信息
+
+- 使用 `thinkingLevel`：最低档映射到 LOW、最高档映射到 HIGH，保留 MEDIUM；自动档使用模型默认值。返回思考摘要的开关独立控制 `includeThoughts`。
+- 不向模型下拉菜单或宿主模型列表添加 Gemini 4 选项，避免与其他插件冲突。对宿主或其他插件已有的模型记录，仅补齐缺失的模型容量信息。
+- 输入、思考和输出共享 1,048,576 token 窗口；保留用户已经选择的上下文及输出预算，不自动提高输出上限。
+
+### 请求组装
+
+- 在实际生成的提示词预算裁剪之前，调用宿主媒体方法加入图片、视频和音频。尊重媒体内联开关、列表 / 画廊选择及生成拦截器过滤后的消息集；同文消息、群聊、提示词注入和继续生成均保持附件归属。
+- 使用插件自己的同源原生生成接口序列化 Gemini 4 请求，保留系统提示、名字处理、提示词后处理、工具定义、搜索和结构化输出设置；移除已经失效的采样参数及候选数量参数。
+- 对以模型消息结尾的继续预填充，保留已有内容并追加用户续写指令，避免发送不被支持的模型预填充。
+- Vertex 的 Gemini 4 上游请求在校验票据目标后使用 `v1beta1`，仍保留原有目标、票据、凭证及服务层验证。
+
+### 签名
+
+- 恢复工具调用的上游 ID 和签名。插件用命名空间元数据穿过旧版 ST 的随机 ID 转换，发给 Google 前还原原始值。
+- 保留多文本片段的独立签名，包括跨长输出段的签名；非流式消息在宿主保存之前补齐签名。
+- 正文被编辑或格式变更后，无法精确匹配的旧签名不会错误地绑定到新内容。
+
+### 长输出续传与费用
+
+- 长输出使用原始请求及最新 continuation token 继续：流式逐片段传递，非流式合并所有片段。
+- 每段请求保留原始 `max_tokens`，不会因续传而提高用户预算；累计用量到达预算时以 MAX_TOKENS 停止。
+- AI Studio 以 `MAX_TOKENS` 加续传令牌表示单次请求上限（流式 65,536 / 非流式 32,768）：只要累计用量仍低于用户预算，就按同一预算继续；Vertex 继续使用 `CONTINUATION`。
+- 费用记录按每段最终 usage 汇总。
+- 中断、缺失续传令牌、无法核对预算、重复令牌、超出续传次数和缺少终止原因都会明确失败，避免把半截输出标为完整成功。
+
+### 流式输出
+
+- 流式响应声明 `no-transform`，宿主的全局压缩不会把它缓冲到生成结束，思考摘要和正文会逐段显示。
+
+### 错误提示
+
+- Google 拒绝请求时，界面显示 HTTP 状态和 Google 给出的原因（例如免费层不可用、区域或参数不受支持），凭据会被脱敏。
+- 流式输出开始后才出错时，以一条错误事件结束，宿主会弹出提示，不再无声断开。
+- 结束时没有任何正文：因输出预算耗尽时提示调高最大回复长度或降低推理强度；被安全策略拦截等其他原因会显示原因代码。
+
+### ST 服务端控制台
+
+- 更新配套服务端插件并重启宿主后，Gemini 4 原生调用也会输出 `Google AI Studio request:` / `Google Vertex AI request:`、非流式响应和流式开始状态，结束时显示耗时、结束原因与汇总用量；失败或取消有单独状态。
+- 请求与非流式响应正文使用宿主的 debug 日志等级，包含提示词及模型输出。认证头、私有代理地址与凭据不会作为调用参数打印，签名和续传 token 从日志副本中移除。流式正文不逐帧打印；现有 `st-vertex-paygo.log` 诊断文件仍不记录正文。
+
+## 使用限制
+
+- Carbon 已在 AI Studio 与 Vertex 正式开放。Google 说明从 Argon 升级无需修改请求结构，兼容层沿用同一套 Gemini 4 接口（`thinkingLevel`、签名、续传令牌、Vertex `v1beta1`），上下文与输出容量按 1,048,576 token 处理。Carbon 与 Argon 都不提供免费层。
+- 服务层级：Vertex 的 Flex PayGo 不支持 Gemini 4，Carbon 与 Argon 可用 Standard 与 Priority。AI Studio 的 Carbon 与 Argon 可用 Standard 与 Flex。
+- 温度、Top-P、Top-K 在 Gemini 4 上不再具有原来的采样效果；兼容层不会伪造这些参数的效果。
+- 输出预算同时包含模型思考和正文，较小的预算（ST 默认 300）仍可能在正文出现前用尽；此时会明确提示，而不是返回空白消息。
+- 是否有模型访问权限、区域或服务层配额，仍由 Google 决定。
+- 宿主的提示词预览（dry run）跳过生成拦截器，因此预览中的媒体用量可能偏低；真实生成会在预算裁剪前计入媒体。
+- OpenAI 兼容桥接的 Gemini 格式转换网关属于另一条链路，这里的原生兼容不会更改它的模型转换规则。
+
+## 验证范围
+
+验证包含前后端完整测试、直接执行本地 ST 1.18 提示词 / 流式解析源码的用例，以及模拟上游的完整链路：前端 → 原生接口 → 私有票据代理 → 多段续传 → ST 解析。服务端的 `npm run test:host-streaming` 还在真实 SillyTavern 1.16 / 1.17 / 1.18 的 express 与全局压缩中逐帧验证流式输出及错误提示。没有调用真实付费 Google API，也没有修改 ST 源码文件。
+
+## 官方依据
+
+- [GenerateContent 迁移说明](https://ai.google.dev/gemini-api/docs/generate-content/latest-model)
+- [Argon 开发指南](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-argon) / [Carbon 开发指南](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-carbon)
+- [Gemini 4 Carbon 更新说明](https://aistudio.google.com/docs/whats-new-gemini-4-carbon)
+- [AI Studio 价格](https://aistudio.google.com/docs/pricing) / [Flex 推理支持模型](https://aistudio.google.com/docs/flex-inference)
+- [Vertex Flex PayGo](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/flex-paygo) / [Priority PayGo](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/priority-paygo) 支持模型
+- [思考签名](https://ai.google.dev/gemini-api/docs/generate-content/thought-signatures)

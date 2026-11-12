@@ -1,0 +1,856 @@
+@import url("./cost.css");
+@import url("./message-cost.css");
+
+/*
+ * Copyright (c) 2026 Mana Nekoha
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Inline tier panel inside the host's Vertex / AI Studio API form.    */
+/* ------------------------------------------------------------------ */
+
+#vertex-paygo-settings.vertex-paygo-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    min-width: 0;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor) 75%, transparent);
+}
+
+#vertex-paygo-settings [hidden] {
+    display: none !important;
+}
+
+#vertex-paygo-settings .vertex-paygo-row {
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 0.75rem;
+}
+
+#vertex-paygo-settings .vertex-paygo-row select {
+    flex: 1 1 9rem;
+    min-width: 9rem;
+    max-width: 100%;
+}
+
+#vertex-paygo-settings .vertex-paygo-only {
+    justify-content: flex-start;
+    gap: 0.35rem;
+    margin: 0;
+}
+
+#vertex-paygo-settings :is(.vertex-paygo-guidance, .vertex-paygo-status, .vertex-paygo-server-status) {
+    display: block;
+    min-width: 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+#vertex-paygo-settings .vertex-paygo-server-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+#vertex-paygo-settings .vertex-paygo-server-status {
+    flex: 1 1 12rem;
+}
+
+#vertex-paygo-settings .vertex-paygo-retry {
+    /* Override SillyTavern's min-content width so CJK labels stay on one line. */
+    width: max-content;
+    flex-shrink: 0;
+    margin: 0;
+    padding: 0.25rem 0.6rem;
+    white-space: nowrap;
+}
+
+/* Status colours are shared by the inline panel and the settings drawer. */
+:is(.vertex-paygo-settings, .vertex-paygo-shell) .vertex-paygo-status--warning {
+    color: var(--warning-color, #e7b55e);
+}
+
+:is(.vertex-paygo-settings, .vertex-paygo-shell) .vertex-paygo-status--error,
+.vertex-paygo-settings[data-server-status="unavailable"] :is(.vertex-paygo-server-status, .vertex-paygo-general-server-status) {
+    color: var(--error-color, #ef7777);
+}
+
+.vertex-paygo-settings[data-server-status="ready"] :is(.vertex-paygo-server-status, .vertex-paygo-general-server-status) {
+    color: var(--success-color, #72d49b);
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared extension settings drawer.                                  */
+/* ------------------------------------------------------------------ */
+
+.vertex-paygo-shell {
+    --vertex-paygo-gap: 0.75rem;
+    --vertex-paygo-radius: 8px;
+    --vertex-paygo-control-height: 2.25rem;
+    --vertex-paygo-card: color-mix(in srgb, var(--SmartThemeBlurTintColor, #222) 70%, transparent);
+    --vertex-paygo-accent: var(--SmartThemeQuoteColor, #8aa4ff);
+    min-width: 0;
+}
+
+.vertex-paygo-shell [hidden] {
+    display: none !important;
+}
+
+.vertex-paygo-shell > .inline-drawer-header:focus-visible {
+    outline: 2px solid var(--vertex-paygo-accent);
+    outline-offset: -2px;
+}
+
+/* Host CSS hides every drawer body; the shell decides with [hidden]. */
+#vertex-paygo-extension-settings-content:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vertex-paygo-gap);
+    min-width: 0;
+    padding: 0.5rem 0.15rem 0.25rem;
+    color: var(--SmartThemeBodyColor, #eee);
+    line-height: 1.5;
+    text-shadow: none;
+    overflow-wrap: anywhere;
+}
+
+/* Tabs */
+
+.vertex-paygo-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 10px;
+    background: var(--SmartThemeBlurTintColor, #222);
+    backdrop-filter: blur(var(--SmartThemeBlurStrength, 0px));
+}
+
+.vertex-paygo-tab {
+    display: inline-flex;
+    flex: 1 1 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-width: 0;
+    min-height: var(--vertex-paygo-control-height);
+    margin: 0;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--SmartThemeBodyColor, #eee);
+    font: inherit;
+    line-height: 1.2;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.vertex-paygo-tab:hover {
+    opacity: 1;
+    background: color-mix(in srgb, var(--SmartThemeBodyColor, #eee) 8%, transparent);
+}
+
+.vertex-paygo-tab[aria-selected="true"] {
+    opacity: 1;
+    font-weight: 600;
+    border-color: color-mix(in srgb, var(--vertex-paygo-accent) 55%, transparent);
+    background: color-mix(in srgb, var(--vertex-paygo-accent) 20%, transparent);
+}
+
+.vertex-paygo-tab:focus-visible {
+    outline: 2px solid var(--vertex-paygo-accent);
+    outline-offset: 1px;
+}
+
+.vertex-paygo-tab-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Panels and cards */
+
+.vertex-paygo-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vertex-paygo-gap);
+    min-width: 0;
+}
+
+.vertex-paygo-shell :is(#vertex-paygo-general-settings, #vertex-paygo-settings, .vertex-paygo-bridge-content) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--vertex-paygo-gap);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.vertex-paygo-shell :is(.vertex-paygo-group, .vertex-paygo-bridge-overview, .vertex-paygo-cost-pricing) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: var(--vertex-paygo-radius);
+    background: var(--vertex-paygo-card);
+}
+
+.vertex-paygo-shell .vertex-paygo-group-title {
+    margin: 0;
+    font-size: 1em;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.vertex-paygo-shell :is(.vertex-paygo-guidance, .vertex-paygo-status, .vertex-paygo-general-server-status) {
+    display: block;
+    min-width: 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+/* Controls */
+
+.vertex-paygo-shell .menu_button {
+    /* ST 1.18 uses min-content, which turns CJK labels into single-character columns. */
+    box-sizing: border-box;
+    display: inline-flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: center;
+    width: max-content;
+    max-width: 100%;
+    min-width: 0;
+    min-height: var(--vertex-paygo-control-height);
+    margin: 0;
+    padding: 0.4rem 0.75rem;
+    font: inherit;
+    line-height: 1.35;
+    text-align: center;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.vertex-paygo-shell .menu_button:disabled {
+    opacity: 0.6;
+    filter: none;
+    cursor: not-allowed;
+}
+
+.vertex-paygo-shell :is(select, textarea, input:not([type="checkbox"], [type="radio"])) {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    min-height: var(--vertex-paygo-control-height);
+    margin: 0;
+}
+
+.vertex-paygo-shell :is(.checkbox_label, .vertex-paygo-bridge-debug) {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5em;
+    margin: 0;
+}
+
+.vertex-paygo-shell :is(.vertex-paygo-log-actions, .vertex-paygo-update-row, .vertex-paygo-general-server-row,
+    .vertex-paygo-bridge-actions, .vertex-paygo-tauri-scope) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.vertex-paygo-shell .vertex-paygo-general-server-status {
+    flex: 1 1 12rem;
+}
+
+.vertex-paygo-shell :is(.vertex-paygo-update-notice, .vertex-paygo-update-status) {
+    flex-basis: 100%;
+    min-width: 0;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+}
+
+.vertex-paygo-shell .vertex-paygo-update-status {
+    /* One line per component. */
+    white-space: pre-line;
+}
+
+.vertex-paygo-shell .vertex-paygo-update-status:empty {
+    display: none;
+}
+
+.vertex-paygo-shell .vertex-paygo-tauri-scope > select {
+    flex: 1 1 12rem;
+    width: auto;
+}
+
+.vertex-paygo-shell .vertex-paygo-message-cost-setting {
+    margin: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* OpenAI bridge tab.                                                  */
+/* ------------------------------------------------------------------ */
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+#vertex-paygo-openai-bridge :is(.vertex-paygo-bridge-controls, .vertex-paygo-bridge-field-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-row :is(input, select, textarea) {
+    flex: 1 1 16rem;
+    padding: 0.45rem 0.6rem;
+    background: var(--SmartThemeBlurTintColor, #222);
+    color: var(--SmartThemeBodyColor, #eee);
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 5px;
+    font: inherit;
+    line-height: 1.4;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-row textarea {
+    field-sizing: content;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-model {
+    flex: 1 1 auto;
+    max-width: 100%;
+    padding: 0.3rem 0.5rem;
+    color: inherit;
+    background: var(--SmartThemeBlurTintColor, #222);
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 5px;
+    overflow-wrap: anywhere;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-field-actions {
+    flex: 0 1 auto;
+    max-width: 100%;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-subsection {
+    min-width: 0;
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: var(--vertex-paygo-radius, 8px);
+    background: var(--vertex-paygo-card);
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-subsection > summary {
+    display: list-item;
+    min-height: var(--vertex-paygo-control-height, 2.25rem);
+    box-sizing: border-box;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-subsection > summary:focus-visible {
+    outline: 2px solid var(--vertex-paygo-accent, currentColor);
+    outline-offset: -2px;
+    border-radius: var(--vertex-paygo-radius, 8px);
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-subsection[open] > summary {
+    border-bottom: 1px solid color-mix(in srgb, var(--SmartThemeBorderColor, #888) 60%, transparent);
+    margin-bottom: 0.6rem;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-subsection-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-width: 0;
+    padding: 0 0.75rem 0.75rem;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-log-entry {
+    min-width: 0;
+    padding: 0.6rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 5px;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-log-entry summary {
+    cursor: pointer;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#vertex-paygo-openai-bridge .vertex-paygo-bridge-log-body {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 24rem;
+    margin: 0.4rem 0 0.8rem;
+    padding: 0.6rem;
+    overflow: auto;
+    background: var(--SmartThemeBlurTintColor, #222);
+    color: inherit;
+    font-size: 0.9em;
+    text-shadow: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    user-select: text;
+}
+
+/* ------------------------------------------------------------------ */
+/* Touch screens and narrow layouts.                                   */
+/* ------------------------------------------------------------------ */
+
+@media (pointer: coarse) {
+    .vertex-paygo-shell {
+        --vertex-paygo-control-height: 2.75rem;
+    }
+
+    /* iOS zooms into any focused field below 16px. */
+    .vertex-paygo-shell :is(select, textarea, input:not([type="checkbox"], [type="radio"])) {
+        font-size: max(16px, 1em);
+    }
+
+    .vertex-paygo-shell :is(.checkbox_label, .vertex-paygo-bridge-debug) {
+        min-height: var(--vertex-paygo-control-height);
+    }
+
+    .vertex-paygo-shell :is(.checkbox_label, .vertex-paygo-bridge-debug) input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}
+
+@media (max-width: 1000px) {
+    .vertex-paygo-shell {
+        --vertex-paygo-gap: 0.65rem;
+    }
+
+    .vertex-paygo-shell :is(.vertex-paygo-group, .vertex-paygo-bridge-overview, .vertex-paygo-cost-pricing) {
+        padding: 0.65rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .vertex-paygo-tab {
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.35rem 0.25rem;
+        font-size: 0.85em;
+    }
+
+    /* Rows of actions become full-width touch targets. */
+    .vertex-paygo-shell :is(.vertex-paygo-log-actions, .vertex-paygo-update-row, .vertex-paygo-bridge-actions,
+        .vertex-paygo-bridge-field-actions, .vertex-paygo-cost-price-actions) > .menu_button {
+        flex: 1 1 8rem;
+        width: auto;
+    }
+
+    #vertex-paygo-openai-bridge .vertex-paygo-bridge-field-actions {
+        flex: 1 1 100%;
+    }
+
+    #vertex-paygo-settings .vertex-paygo-row select {
+        min-width: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vertex-paygo-tab {
+        transition: none;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/* Popups and controls shared with TauriTavern.                        */
+/* ------------------------------------------------------------------ */
+
+.vertex-paygo-tauritavern-notice {
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.vertex-paygo-tauritavern-notice pre {
+    padding: 0.75rem;
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 6px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    user-select: text;
+}
+
+.vertex-paygo-tauritavern-dialog {
+    box-sizing: border-box;
+    width: min(680px, 90vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    color: var(--SmartThemeBodyColor, #eee);
+    background: var(--SmartThemeBlurTintColor, #222);
+    border: 1px solid var(--SmartThemeBorderColor, #888);
+    border-radius: 10px;
+    padding: 1.25rem;
+}
+
+.vertex-paygo-log-viewer {
+    width: 100%;
+    min-width: 0;
+}
+
+.vertex-paygo-log-output {
+    box-sizing: border-box;
+    width: 100%;
+    max-height: 60vh;
+    margin: 0;
+    padding: 0.75rem;
+    overflow: auto;
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--SmartThemeBlurTintColor) 85%, #000 15%);
+    color: var(--SmartThemeBodyColor);
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+    user-select: text;
+}
+
+.vertex-paygo-message-cost-setting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+    margin-top: 0.75rem;
+}
+
+.vertex-paygo-message-cost-setting select {
+    width: 100%;
+    min-width: 0;
+}
+
+.vertex-paygo-data-recovery {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.vertex-paygo-data-recovery select {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.vertex-paygo-data-recovery [hidden] {
+    display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Floating service tier switcher, outside the host's drawers.         */
+/* ------------------------------------------------------------------ */
+
+.vertex-paygo-floating {
+    /* Keep the size in sync with BALL_SIZE in src/floating-tier-ui.js. */
+    --vertex-paygo-floating-size: 60px;
+    --vertex-paygo-floating-surface: var(--SmartThemeBlurTintColor, #252935);
+    --vertex-paygo-floating-border: var(--SmartThemeBorderColor, #667);
+    /* Standard stays neutral; the host quote colour is often orange and would read as Priority. */
+    --vertex-paygo-floating-tier: color-mix(in srgb, var(--SmartThemeBodyColor, #eee) 55%, transparent);
+    position: fixed;
+    right: 12px;
+    top: 60vh;
+    width: var(--vertex-paygo-floating-size);
+    height: var(--vertex-paygo-floating-size);
+    z-index: 2000;
+    color: var(--SmartThemeBodyColor, #eee);
+    font-family: inherit;
+    transition: left 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.vertex-paygo-floating--dragging {
+    transition: none;
+}
+
+.vertex-paygo-floating[hidden], .vertex-paygo-floating [hidden] {
+    display: none !important;
+}
+
+/* Each tier carries one accent: the ball ring, the option stripe and its check mark. */
+.vertex-paygo-floating [data-tier="flex"] { --vertex-paygo-floating-tier: #5fc59a; }
+.vertex-paygo-floating [data-tier="priority"] { --vertex-paygo-floating-tier: #e2a956; }
+
+.vertex-paygo-floating-ball {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    border: 2px solid var(--vertex-paygo-floating-tier);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 50% 25%, color-mix(in srgb, var(--vertex-paygo-floating-tier) 30%, transparent), transparent 70%),
+        var(--vertex-paygo-floating-surface);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 14px #0006, 0 0 0 4px color-mix(in srgb, var(--vertex-paygo-floating-tier) 16%, transparent);
+    color: inherit;
+    font-family: inherit;
+    line-height: 1.1;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+@media (hover: hover) {
+    .vertex-paygo-floating-ball:not(:disabled):hover { transform: scale(1.06); }
+}
+
+.vertex-paygo-floating-ball:not(:disabled):active { transform: scale(0.95); }
+
+.vertex-paygo-floating-ball[aria-expanded="true"] {
+    box-shadow: 0 4px 14px #0006, 0 0 0 5px color-mix(in srgb, var(--vertex-paygo-floating-tier) 32%, transparent);
+}
+
+.vertex-paygo-floating--dragging .vertex-paygo-floating-ball:not(:disabled) {
+    cursor: grabbing;
+    transform: scale(1.08);
+    box-shadow: 0 10px 24px #0008, 0 0 0 4px color-mix(in srgb, var(--vertex-paygo-floating-tier) 16%, transparent);
+}
+
+.vertex-paygo-floating-brand {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.vertex-paygo-floating-mode {
+    max-width: calc(100% - 4px);
+    overflow: hidden;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A spinning arc on the ring while a tier change or host transition is running. */
+.vertex-paygo-floating-ball:disabled {
+    cursor: progress;
+    opacity: 0.8;
+}
+
+.vertex-paygo-floating-ball[aria-busy="true"]::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border: 2px solid transparent;
+    border-top-color: var(--vertex-paygo-floating-tier);
+    border-radius: 50%;
+    animation: vertex-paygo-floating-spin 0.8s linear infinite;
+}
+
+.vertex-paygo-floating button:focus-visible {
+    outline: 2px solid var(--vertex-paygo-floating-tier);
+    outline-offset: 3px;
+}
+
+.vertex-paygo-floating-options {
+    --vertex-paygo-floating-shift: -4px;
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid var(--vertex-paygo-floating-border);
+    border-radius: 12px;
+    background: var(--vertex-paygo-floating-surface);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 28px #0008;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    animation: vertex-paygo-floating-in 0.14s ease-out;
+}
+
+.vertex-paygo-floating[data-placement="above"] .vertex-paygo-floating-options {
+    --vertex-paygo-floating-shift: 4px;
+    top: auto;
+    bottom: calc(100% + 10px);
+}
+
+.vertex-paygo-floating-header {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 2px 6px 8px;
+    border-bottom: 1px solid color-mix(in srgb, var(--vertex-paygo-floating-border) 60%, transparent);
+    margin-bottom: 2px;
+}
+
+.vertex-paygo-floating-header small {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.vertex-paygo-floating-model {
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vertex-paygo-floating-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    margin: 0;
+    padding: 8px 30px 8px 14px;
+    box-sizing: border-box;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.vertex-paygo-floating-option::before {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 9px;
+    bottom: 9px;
+    width: 3px;
+    border-radius: 2px;
+    background: var(--vertex-paygo-floating-tier);
+    opacity: 0.45;
+}
+
+.vertex-paygo-floating-option:not(:disabled):hover {
+    background: color-mix(in srgb, var(--vertex-paygo-floating-tier) 12%, transparent);
+}
+
+.vertex-paygo-floating-option[aria-pressed="true"] {
+    border-color: color-mix(in srgb, var(--vertex-paygo-floating-tier) 60%, transparent);
+    background: color-mix(in srgb, var(--vertex-paygo-floating-tier) 16%, transparent);
+}
+
+.vertex-paygo-floating-option[aria-pressed="true"]::before { opacity: 1; }
+
+.vertex-paygo-floating-option[aria-pressed="true"]::after {
+    content: "✓";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--vertex-paygo-floating-tier);
+    font-weight: 700;
+}
+
+.vertex-paygo-floating button.vertex-paygo-floating-option:focus-visible { outline-offset: 1px; }
+
+.vertex-paygo-floating-name {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.vertex-paygo-floating-hint {
+    font-size: 11px;
+    line-height: 1.35;
+    opacity: 0.72;
+    overflow-wrap: anywhere;
+}
+
+.vertex-paygo-floating-option[data-support="caution"] .vertex-paygo-floating-hint {
+    color: var(--warning-color, #e7b55e);
+    opacity: 1;
+}
+
+.vertex-paygo-floating-option:disabled { cursor: not-allowed; }
+.vertex-paygo-floating-option:disabled :is(.vertex-paygo-floating-name, .vertex-paygo-floating-hint),
+.vertex-paygo-floating-option:disabled::before { opacity: 0.45; }
+
+.vertex-paygo-floating-setting { margin: 10px 0; }
+
+@keyframes vertex-paygo-floating-spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes vertex-paygo-floating-in {
+    from {
+        opacity: 0;
+        transform: translateY(var(--vertex-paygo-floating-shift)) scale(0.97);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .vertex-paygo-floating,
+    .vertex-paygo-floating-ball,
+    .vertex-paygo-floating-option {
+        transition: none;
+    }
+
+    .vertex-paygo-floating-options { animation: none; }
+    .vertex-paygo-floating-ball[aria-busy="true"]::after { animation-duration: 2.4s; }
+}
